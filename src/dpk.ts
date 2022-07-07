@@ -1,40 +1,41 @@
+/**
+ * 3. Write up a brief (~1 paragraph) explanation of why you made the choices you did and why specifically your version is more "readable" than the original.
+ *
+ * Using newer perks from typescript and javascript on the lastest versions, we can reduce number of lines in code also, with DI we can add extended testing support
+ */
 const TRIVIAL_PARTITION_KEY = "0";
 const MAX_PARTITION_KEY_LENGTH = 256;
 
-export default class dpk {
+export default class Dpk {
+  // We should pass crypto on constructor for DI
   constructor(protected crypto: any) {}
 
-  deterministicPartitionKey(event) {
-    let candidate;
+  deterministicPartitionKey(event?: any): void | string {
+    let partitionKey;
 
     if (event) {
-      if (event.partitionKey) {
-        candidate = event.partitionKey;
-      } else {
-        const data = JSON.stringify(event);
-
-        candidate = this.crypto
-          .createHash("sha3-512")
-          .update(data)
-          .digest("hex");
-      }
-    }
-    console.log(candidate);
-    if (candidate) {
-      if (typeof candidate !== "string") {
-        candidate = JSON.stringify(candidate);
-      }
-    } else {
-      candidate = TRIVIAL_PARTITION_KEY;
+      partitionKey = this.isString(event?.partitionKey)
+        ? event.partitionKey
+        : this.createHash(JSON.stringify(event));
     }
 
-    if (candidate.length > MAX_PARTITION_KEY_LENGTH) {
-      candidate = this.crypto
-        .createHash("sha3-512")
-        .update(candidate)
-        .digest("hex");
+    partitionKey =
+      partitionKey && this.isString(partitionKey)
+        ? JSON.stringify(partitionKey)
+        : TRIVIAL_PARTITION_KEY;
+
+    if (partitionKey.length > MAX_PARTITION_KEY_LENGTH) {
+      partitionKey = this.createHash(partitionKey);
     }
 
-    return candidate;
+    return partitionKey;
+  }
+
+  private createHash(input: string): string {
+    return this.crypto.createHash("sha3-512").update(input).digest("hex");
+  }
+
+  private isString(input: any): boolean {
+    return typeof input === "string";
   }
 }

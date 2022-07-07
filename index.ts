@@ -1,3 +1,4 @@
-import dpk from "@src/dpk";
+import dpk from "@src/Dpk";
+import crypto from "crypto";
 
-console.log(dpk.deterministicPartitionKey());
+console.log(dpk.deterministicPartitionKey(crypto));
